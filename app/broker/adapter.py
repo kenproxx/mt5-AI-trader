@@ -1,5 +1,6 @@
 """Read-only MT5 API adapter."""
 from decimal import Decimal
+
 from app.broker.models import AccountSnapshot, SymbolSnapshot, TickSnapshot
 
 
