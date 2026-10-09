@@ -6,7 +6,7 @@ def forward_direction_labels(candles, horizon=3):
         raise ValueError("horizon must be positive")
     data = list(candles)
     times = [x["time"] for x in data]
-    if any(a >= b for a, b in zip(times, times[1:])):
+    if any(a >= b for a, b in zip(times, times[1:], strict=False)):
         raise ValueError("Candles must be chronological")
     labels = []
     for i in range(len(data) - horizon):
