@@ -1,8 +1,9 @@
 from datetime import UTC, datetime
+
 import pytest
 
-from app.market_data.validation import DataQualityError, validate_candles
 from app.market_data.storage import incremental_merge
+from app.market_data.validation import DataQualityError, validate_candles
 
 
 def candle(t):
