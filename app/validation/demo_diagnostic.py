@@ -3,7 +3,6 @@ from dataclasses import asdict, dataclass
 from decimal import Decimal
 
 from app.broker.compatibility import CompatibilityChecker
-from app.broker.models import BrokerState
 from app.validation.demo_feasibility import inspect_minimum_lot
 
 
