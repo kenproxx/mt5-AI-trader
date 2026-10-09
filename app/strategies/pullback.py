@@ -1,5 +1,6 @@
 """Baseline paper-only EMA pullback signal, no performance claims."""
 from dataclasses import dataclass
+
 from app.indicators.trend import ema
 
 
