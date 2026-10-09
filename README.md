@@ -35,6 +35,7 @@ The stop price `2999.00` is an example only; choose a valid stop relative to the
 | 11 | Manual MT5 diagnostic CLI |
 | 12 | Fail-closed MT5 Demo account mode verifier |
 | 13 | Wire Demo account verifier into diagnostic workflow |
+| 14 | Sanitized, read-only Demo diagnostic audit summary |
 
 ## Project safety policy
 
@@ -44,8 +45,12 @@ The stop price `2999.00` is an example only; choose a valid stop relative to the
 - Broker compatibility checks and `order_calc_margin` / `order_calc_profit` are read-only. The existing `order_check` helper also does not transmit an order.
 - No credentials in source control or diagnostic output; Telegram is off by default.
 
+## Read-only diagnostic audit
+
+Phase 14 adds `app.validation.audit.build_audit` for a sanitized, timestamped summary of the manual diagnostic. It deliberately returns `can_trade: false` for every outcome and does not store or transmit the report. It must not be used as execution authorization.
+
 ## What remains incomplete
 
 No verified real LiteFinance Demo connection in CI; no tick-level realistic backtesting, model training and calibrated out-of-sample evaluation, durable alert operations, recovery and execution integration, extended forward Demo testing, or production trading controls. CI PASS means unit/lint/security checks passed, **not** that the bot can trade safely or profitably.
 
-See `docs/phase9.md`, `docs/phase10.md`, `docs/phase11.md` and `docs/phase12.md` for validation limitations.
+See `docs/phase9.md`, `docs/phase10.md`, `docs/phase11.md` and `docs/phase12.md` through `docs/phase14.md` for validation limitations.
