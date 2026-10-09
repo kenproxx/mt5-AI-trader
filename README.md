@@ -37,6 +37,7 @@ The stop price `2999.00` is an example only; choose a valid stop relative to the
 | 13 | Wire Demo account verifier into diagnostic workflow |
 | 14 | Sanitized, read-only Demo diagnostic audit summary |
 | 15 | Optional exclusive-create sanitized JSON audit export |
+| 16 | Audit JSON schema validation and SHA-256 integrity digest |
 
 ## Project safety policy
 
@@ -58,8 +59,12 @@ python -m scripts.demo_diagnostic --side BUY --stop 2999.00 --audit-json demo-au
 
 The audit file is newly created (existing files are never overwritten) and contains a sanitized report with `can_trade: false`. Keep audit records private. The stop value is illustrative only.
 
+## Audit file verification
+
+`app.validation.audit_integrity.verify_audit_file(path)` validates the report schema and safety flag and returns a SHA-256 checksum. A checksum detects changes only when compared against a previously trusted digest; it does not authenticate broker origin or authorize trading.
+
 ## What remains incomplete
 
 No verified real LiteFinance Demo connection in CI; no tick-level realistic backtesting, model training and calibrated out-of-sample evaluation, durable alert operations, recovery and execution integration, extended forward Demo testing, or production trading controls. CI PASS means unit/lint/security checks passed, **not** that the bot can trade safely or profitably.
 
-See `docs/phase9.md` through `docs/phase15.md` for validation limitations.
+See `docs/phase9.md` through `docs/phase16.md` for validation limitations.
