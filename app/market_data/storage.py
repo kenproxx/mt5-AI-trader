@@ -1,7 +1,7 @@
 """Atomic parquet writes and monotonic incremental merge."""
-from pathlib import Path
 import os
 import tempfile
+from pathlib import Path
 
 from app.market_data.validation import validate_candles
 
