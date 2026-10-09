@@ -1,13 +1,13 @@
 """Sanitized, bounded monitoring events; no secrets or order execution."""
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 ALLOWED = frozenset({"component", "state", "reason", "symbol", "mode", "correlation_id"})
 
 
 def make_event(component, state, **fields):
     data = {
-        "timestamp_utc": datetime.now(timezone.utc).isoformat(),
+        "timestamp_utc": datetime.now(UTC).isoformat(),
         "component": str(component)[:80],
         "state": str(state)[:80],
     }
