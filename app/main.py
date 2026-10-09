@@ -1,6 +1,7 @@
 """Read-only Phase 1 diagnostics; no order_send method is implemented."""
 import argparse
 from decimal import Decimal
+
 from app.broker.compatibility import CompatibilityChecker
 from app.broker.mock import MockAdapter
 from app.risk.engine import RiskEngine
