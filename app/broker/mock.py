@@ -1,6 +1,7 @@
 """Synthetic test-only adapter; never represents real LiteFinance trading terms."""
 from decimal import Decimal
 from time import time
+
 from app.broker.models import AccountSnapshot, SymbolSnapshot, TickSnapshot
 
 
