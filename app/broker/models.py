@@ -1,10 +1,10 @@
 """Typed, immutable snapshots: no write-capable trading API here."""
 from dataclasses import dataclass
 from decimal import Decimal
-from enum import Enum
+from enum import StrEnum
 
 
-class BrokerState(str, Enum):
+class BrokerState(StrEnum):
     BROKER_CONNECTED = "BROKER_CONNECTED"
     BROKER_DISCONNECTED = "BROKER_DISCONNECTED"
     LEVERAGE_MISMATCH = "LEVERAGE_MISMATCH"
