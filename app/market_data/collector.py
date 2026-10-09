@@ -1,5 +1,6 @@
 """Read-only MT5 historical bars; no fabricated data."""
 from datetime import UTC, datetime
+
 from app.market_data.validation import validate_candles
 
 TIMEFRAMES = {"M1": 60, "M5": 300, "M15": 900, "H1": 3600}
