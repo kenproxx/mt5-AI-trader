@@ -36,6 +36,7 @@ The stop price `2999.00` is an example only; choose a valid stop relative to the
 | 12 | Fail-closed MT5 Demo account mode verifier |
 | 13 | Wire Demo account verifier into diagnostic workflow |
 | 14 | Sanitized, read-only Demo diagnostic audit summary |
+| 15 | Optional exclusive-create sanitized JSON audit export |
 
 ## Project safety policy
 
@@ -49,8 +50,16 @@ The stop price `2999.00` is an example only; choose a valid stop relative to the
 
 Phase 14 adds `app.validation.audit.build_audit` for a sanitized, timestamped summary of the manual diagnostic. It deliberately returns `can_trade: false` for every outcome and does not store or transmit the report. It must not be used as execution authorization.
 
+## Optional JSON audit export
+
+```powershell
+python -m scripts.demo_diagnostic --side BUY --stop 2999.00 --audit-json demo-audit.json
+```
+
+The audit file is newly created (existing files are never overwritten) and contains a sanitized report with `can_trade: false`. Keep audit records private. The stop value is illustrative only.
+
 ## What remains incomplete
 
 No verified real LiteFinance Demo connection in CI; no tick-level realistic backtesting, model training and calibrated out-of-sample evaluation, durable alert operations, recovery and execution integration, extended forward Demo testing, or production trading controls. CI PASS means unit/lint/security checks passed, **not** that the bot can trade safely or profitably.
 
-See `docs/phase9.md`, `docs/phase10.md`, `docs/phase11.md` and `docs/phase12.md` through `docs/phase14.md` for validation limitations.
+See `docs/phase9.md` through `docs/phase15.md` for validation limitations.
