@@ -1,5 +1,6 @@
 """Fail-closed MT5 broker compatibility inspection."""
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from app.broker.models import BrokerState, Validation
 from app.config.policy import TradingPolicy
 
@@ -40,7 +41,7 @@ class CompatibilityChecker:
             tick = self.adapter.symbol_info_tick(symbol.name)
             if tick is None or tick.bid <= 0 or tick.ask <= tick.bid:
                 return Validation(BrokerState.STALE_DATA, "Invalid quote", symbol, tick, account)
-            now = now_epoch if now_epoch is not None else int(datetime.now(timezone.utc).timestamp())
+            now = now_epoch if now_epoch is not None else int(datetime.now(UTC).timestamp())
             if tick.time <= 0 or tick.time > now + 5 or now - tick.time > max_tick_age:
                 return Validation(BrokerState.STALE_DATA, "Tick stale or future", symbol, tick, account)
             return Validation(BrokerState.TRADE_ELIGIBLE, "Read-only account/symbol checks passed", symbol, tick, account)
