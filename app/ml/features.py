@@ -7,7 +7,7 @@ def feature_rows(candles, lookback=20):
         raise ValueError("lookback must be at least two")
     data = list(candles)
     times = [x["time"] for x in data]
-    if any(a >= b for a, b in zip(times, times[1:])):
+    if any(a >= b for a, b in zip(times, times[1:], strict=False)):
         raise ValueError("Candles must have unique ascending timestamps")
     output = []
     for i in range(lookback, len(data)):
