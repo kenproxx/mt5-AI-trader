@@ -1,6 +1,7 @@
 """Strict broker-calculated sizing; no order transmission."""
 from dataclasses import dataclass
 from decimal import Decimal
+
 from app.broker.adapter import dec
 from app.broker.models import BrokerState
 from app.config.policy import TradingPolicy
