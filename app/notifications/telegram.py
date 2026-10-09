@@ -1,6 +1,6 @@
 """Explicit opt-in Telegram transport with bounded payload and timeouts."""
+import http.client
 import json
-from urllib import request
 
 
 def send_telegram(*, token, chat_id, message, enabled=False):
@@ -11,14 +11,16 @@ def send_telegram(*, token, chat_id, message, enabled=False):
     if not isinstance(message, str) or len(message) > 2000:
         raise ValueError("Message must be text up to 2000 characters")
     payload = json.dumps({"chat_id": chat_id, "text": message}).encode()
-    req = request.Request(
-        "https://api.telegram.org/bot" + token + "/sendMessage",
-        data=payload,
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
-    with request.urlopen(req, timeout=10) as response:
-        data = json.load(response)
-    if data.get("ok") is not True:
-        raise RuntimeError("Telegram API rejected the alert")
+    conn = http.client.HTTPSConnection("api.telegram.org", timeout=10)
+    try:
+        conn.request(
+            "POST", "/bot" + token + "/sendMessage",
+            body=payload, headers={"Content-Type": "application/json"},
+        )
+        response = conn.getresponse()
+        data = json.loads(response.read(65536))
+        if response.status != 200 or data.get("ok") is not True:
+            raise RuntimeError("Telegram API rejected the alert")
+    finally:
+        conn.close()
     return True
