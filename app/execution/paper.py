@@ -1,6 +1,7 @@
 """Paper-only decision engine; no broker write calls."""
 from dataclasses import dataclass
 from decimal import Decimal
+
 from app.broker.models import BrokerState
 from app.risk.engine import RiskEngine
 
