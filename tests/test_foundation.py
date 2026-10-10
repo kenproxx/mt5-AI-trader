@@ -118,7 +118,7 @@ def test_order_check():
     b = MockAdapter()
     decision = RiskDecision(BrokerState.TRADE_ELIGIBLE, "sized")
     assert order_preflight(b, decision, {"sl": 2999.0}) == BrokerState.TRADE_ELIGIBLE
-    b.order_check_result = type("Result", (), {"retcode": 10009})()
+    b.order_check_result = type("Result", (), {"retcode": 0})()
     assert order_preflight(b, decision, {"sl": 2999.0}) == BrokerState.ORDER_REJECTED
     assert order_preflight(b, decision, {}) == BrokerState.NO_TRADE
 

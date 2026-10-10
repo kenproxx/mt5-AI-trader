@@ -37,11 +37,13 @@ class RiskEngine:
             return reject(BrokerState.NO_TRADE, "Broker not eligible")
         if side not in ("BUY", "SELL"):
             return reject(BrokerState.NO_TRADE, "Invalid side")
-        if open_positions < 0 or open_positions >= self.policy.max_open_positions:
+        if type(open_positions) is not int or open_positions < 0 or open_positions >= self.policy.max_open_positions:
             return reject(BrokerState.RISK_LIMIT_EXCEEDED, "Position limit")
         sym, tick, acct = status.symbol, status.tick, status.account
         values = (stop, costs_usd, daily_loss_usd, weekly_loss_usd)
-        if any(not x.is_finite() for x in values) or stop <= 0 or costs_usd < 0:
+        if any(not isinstance(x, Decimal) or not x.is_finite() for x in values):
+            return reject(BrokerState.NO_TRADE, "Invalid risk input types")
+        if stop <= 0 or costs_usd < 0:
             return reject(BrokerState.NO_TRADE, "Invalid risk inputs")
         entry = tick.ask if side == "BUY" else tick.bid
         if (side == "BUY" and stop >= tick.bid) or (side == "SELL" and stop <= tick.ask):
@@ -51,7 +53,8 @@ class RiskEngine:
             return reject(BrokerState.NO_TRADE, "SL too close or wrong tick grid")
         day_base = daily_start_equity if daily_start_equity is not None else acct.equity
         week_base = weekly_start_equity if weekly_start_equity is not None else acct.equity
-        if day_base <= 0 or week_base <= 0 or daily_loss_usd < 0 or weekly_loss_usd < 0:
+        if (any(not isinstance(x, Decimal) or not x.is_finite() for x in (day_base, week_base))
+            or day_base <= 0 or week_base <= 0 or daily_loss_usd < 0 or weekly_loss_usd < 0):
             return reject(BrokerState.NO_TRADE, "Invalid loss baseline")
         daily_cap = day_base * self.policy.max_daily_loss_pct / 100
         weekly_cap = week_base * self.policy.max_weekly_loss_pct / 100

@@ -17,6 +17,8 @@ class CompatibilityChecker:
             account = self.adapter.account_info()
             if account is None:
                 return Validation(BrokerState.BROKER_DISCONNECTED, "Missing account")
+            if type(account.account_trade_mode) is not int or account.account_trade_mode != 0:
+                return Validation(BrokerState.TRADING_DISABLED, "Account DEMO mode unverified", account=account)
             if account.leverage != self.policy.required_leverage:
                 return Validation(BrokerState.LEVERAGE_MISMATCH, "Leverage not 1:50", account=account)
             if account.currency != "USD" or account.equity <= 0 or account.free_margin < 0:

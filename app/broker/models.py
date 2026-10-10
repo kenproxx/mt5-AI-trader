@@ -33,6 +33,7 @@ class AccountSnapshot:
     server: str
     margin_so_call: Decimal = Decimal("0")
     margin_so_so: Decimal = Decimal("0")
+    account_trade_mode: int | None = None
 
 
 @dataclass(frozen=True)
