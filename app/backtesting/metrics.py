@@ -4,7 +4,8 @@ from decimal import Decimal
 
 def summarize(trade_pnl, initial_equity=Decimal("5")):
     pnl = [Decimal(str(x)) for x in trade_pnl]
-    if initial_equity <= 0 or any(not x.is_finite() for x in pnl):
+    if (not isinstance(initial_equity, Decimal) or not initial_equity.is_finite()
+        or initial_equity <= 0 or any(not x.is_finite() for x in pnl)):
         raise ValueError("Invalid backtest inputs")
     equity = initial_equity
     peak = equity
@@ -14,6 +15,8 @@ def summarize(trade_pnl, initial_equity=Decimal("5")):
         peak = max(peak, equity)
         if peak > 0:
             max_dd = max(max_dd, (peak - equity) / peak)
+        if equity <= 0:
+            max_dd = max(max_dd, Decimal("1"))
     wins = [x for x in pnl if x > 0]
     losses = [x for x in pnl if x < 0]
     gross_profit = sum(wins, Decimal("0"))

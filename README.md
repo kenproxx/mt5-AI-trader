@@ -116,3 +116,7 @@ bandit -r app -ll
 Mọi thay đổi phải đi qua CI và review trước khi merge. Không đưa mật khẩu, token, thông tin đăng nhập vào repository. Chỉ sử dụng tài khoản Demo để kiểm tra; nếu không chắc chắn về điều kiện giao dịch, trả về `NO_TRADE`.
 
 Xem thêm `docs/phase9.md` đến `docs/phase15.md` và `docs/code-review-2026-10.md`.
+
+## Cải tiến từ báo cáo review
+
+Đã bổ sung kiểm tra tài khoản Demo tại broker, chuẩn hóa đầu vào rủi ro, sửa MockAdapter và retcode preflight. Đợt tiếp theo bổ sung chia tập ML theo thời gian có loại bỏ nhãn chồng lấn và xử lý drawdown khi vốn về 0. Xem `docs/code-review-2026-10.md` và `docs/review-fixes-phase2.md`. Các cải tiến chưa chứng minh bot giao dịch được trên LiteFinance Demo thật.
