@@ -9,12 +9,12 @@ class MockAdapter:
     def __init__(self):
         self.connected = True
         self.account = AccountSnapshot(50, "USD", Decimal("5"), Decimal("5"), Decimal("5"),
-                                       Decimal("0"), True, True, "MOCK")
+                                       Decimal("0"), True, True, "MOCK", account_trade_mode=0)
         self.symbol = SymbolSnapshot("XAUUSD", 4, Decimal("0.01"), Decimal("10"),
                                      Decimal("0.01"), Decimal("100"), Decimal("0.01"),
                                      Decimal("1"), 10, 0, 2, 1, Decimal("0.01"), 2, True)
         self.tick = TickSnapshot(Decimal("3000.00"), Decimal("3000.20"), int(time()))
-        self.order_check_result = type("Check", (), {"retcode": 0})()
+        self.order_check_result = type("Check", (), {"retcode": 10009})()
 
     def initialize(self):
         return self.connected
@@ -42,11 +42,11 @@ class MockAdapter:
 
     def order_calc_profit(self, side, symbol, lots, entry, stop):
         if side == "BUY":
-            return (stop - entry) * lots * float(self.symbol.trade_contract_size)
-        return (entry - stop) * lots * float(self.symbol.trade_contract_size)
+            return (Decimal(str(stop)) - Decimal(str(entry))) * Decimal(str(lots)) * self.symbol.trade_contract_size
+        return (Decimal(str(entry)) - Decimal(str(stop))) * Decimal(str(lots)) * self.symbol.trade_contract_size
 
     def order_calc_margin(self, side, symbol, lots, price):
-        return price * lots * float(self.symbol.trade_contract_size) / 50
+        return Decimal(str(price)) * Decimal(str(lots)) * self.symbol.trade_contract_size / 50
 
     def order_check(self, request):
         return self.order_check_result

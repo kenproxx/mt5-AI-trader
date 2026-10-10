@@ -39,6 +39,7 @@ class MT5Adapter:
             trade_allowed=bool(a.trade_allowed), trade_expert=bool(a.trade_expert),
             server=str(a.server), margin_so_call=dec(a.margin_so_call),
             margin_so_so=dec(a.margin_so_so),
+            account_trade_mode=getattr(a, "trade_mode", None),
         )
 
     def symbols_get(self):
