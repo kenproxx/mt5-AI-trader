@@ -1,70 +1,118 @@
-# MT5 AI Trader — LiteFinance XAUUSD (Research / Demo only)
+# MT5 AI Trader — Bot nghiên cứu vàng XAUUSD (chỉ Demo)
 
-Python MetaTrader 5 research project for XAUUSD, **initial equity $5 USD** and **required leverage 1:50**. **No live trading, no `order_send`, and no guarantee of profitability.** Fail-closed: any invalid broker, risk, margin or Demo account condition must block trading. The repo is a set of research foundations, **not a complete autonomous AI trading bot**.
+Dự án Python kết nối MetaTrader 5 (MT5) để **nghiên cứu, kiểm tra rủi ro và mô phỏng** chiến lược giao dịch vàng XAUUSD trên LiteFinance Classic.
 
-## Quick start — Windows 11
+> **Cảnh báo:** Đây **chưa phải bot AI giao dịch tự động hoàn chỉnh**. Mã nguồn hiện không triển khai `order_send`, không cho phép giao dịch tài khoản thật (Live) và **không bảo đảm lợi nhuận**. Kết quả CI chỉ chứng minh các kiểm thử tự động đã chạy thành công, không chứng minh bot hoạt động an toàn trên broker thật.
 
-Install 64-bit Python 3.11/3.12 and MetaTrader 5 terminal. Sign into a **LiteFinance Demo** account and verify the terminal's account and leverage.
+## 1. Thông số cố định
+
+| Thông số | Giá trị |
+| --- | --- |
+| Sản phẩm | XAUUSD |
+| Broker mục tiêu | LiteFinance, MT5 Classic |
+| Số vốn tham chiếu | **5 USD** |
+| Đòn bẩy bắt buộc | **1:50** |
+| Chế độ | **Demo / nghiên cứu**, không Live |
+| Rủi ro mục tiêu mỗi lệnh | 0,5% vốn |
+| Rủi ro tối đa mỗi lệnh | 1% vốn |
+| Giới hạn lỗ trong ngày / tuần | 2% / 5% |
+| Dự trữ ký quỹ tự do tối thiểu | 30% vốn |
+| Số vị thế mở tối đa | 1 |
+
+**Lưu ý quan trọng với vốn 5 USD:** Nếu khối lượng tối thiểu của broker là 0,01 lot và số tiền ký quỹ hoặc mức lỗ tại Stop Loss vượt ngân sách, chương trình phải từ chối giao dịch (`NO_TRADE`). Không tăng đòn bẩy hoặc bỏ qua giới hạn rủi ro để ép mở lệnh. Thông số hợp đồng, spread, bước lot và yêu cầu ký quỹ phải lấy trực tiếp từ MT5, không coi giá trị mô phỏng là số liệu thực tế.
+
+## 2. Cài đặt trên Windows 11
+
+Cài Python 3.11 hoặc 3.12 (64-bit) và MetaTrader 5. Đăng nhập tài khoản **LiteFinance Demo**, tự kiểm tra đúng máy chủ và đòn bẩy 1:50.
+
+Mở PowerShell tại thư mục dự án:
 
 ```powershell
 py -3.12 -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -e ".[dev,mt5]"
 python -m pytest -q
+ruff check .
 python -m app.main --mock
+```
+
+Chạy kiểm tra broker thực tế **chỉ đọc**:
+
+```powershell
 python -m app.main --real
+```
+
+**Cảnh báo:** Lệnh `--real` hiện chỉ kiểm tra khả năng tương thích và rủi ro; chưa tự xác minh `trade_mode` của tài khoản là Demo. Không dùng đầu ra của lệnh này để cấp phép giao dịch.
+
+## 3. Kiểm tra tài khoản Demo và ký quỹ
+
+```powershell
 python -m scripts.demo_diagnostic --side BUY --stop 2999.00 --costs-usd 0
 ```
 
-The stop price `2999.00` is an example only; choose a valid stop relative to the current Bid/Ask and symbol stop-distance rules. `--real` is **read-only**. The diagnostic checks MT5 `ACCOUNT_TRADE_MODE_DEMO` before margin/profit inspection and never places orders. The output excludes account login and credentials. GitHub CI uses mocks, not a real broker terminal.
+Giá `2999.00` **chỉ là ví dụ**. Phải chọn Stop Loss phù hợp với Bid/Ask hiện tại, bước giá và khoảng cách tối thiểu broker cho phép. Chương trình xác minh `ACCOUNT_TRADE_MODE_DEMO` trước khi tính margin và mức lỗ ước tính. Không gửi lệnh mua/bán.
 
-## Implemented foundations
-
-| Phase | Scope |
-| --- | --- |
-| 1 | Broker adapter, fixed Demo policy, risk engine, mock CI |
-| 2 | OHLC market data collection and validation |
-| 3 | EMA/ATR strategy and paper signal path |
-| 4 | Basic backtest metrics and chronological split |
-| 5 | Causal ML feature and label research helpers |
-| 6 | Structured monitoring and fail-closed health assessment |
-| 7 | Offline HTML dashboard snapshot/report |
-| 8 | Opt-in Telegram alert sender and in-memory cooldown |
-| 9 | Demo research readiness checklist |
-| 10 | Read-only minimum-lot margin/stop-loss feasibility |
-| 11 | Manual MT5 diagnostic CLI |
-| 12 | Fail-closed MT5 Demo account mode verifier |
-| 13 | Wire Demo account verifier into diagnostic workflow |
-| 14 | Sanitized, read-only Demo diagnostic audit summary |
-| 15 | Optional exclusive-create sanitized JSON audit export |
-| 16 | Audit JSON schema validation and SHA-256 integrity digest |
-
-## Project safety policy
-
-- `TradingPolicy`: fixed 1:50, Demo only, initial balance reference $5, target risk 0.5%, maximum risk 1%, daily loss 2%, weekly loss 5%, reserve free margin 30%, max one open position.
-- Broker contract size, lot steps, tick value, spread and actual leverage must be read from MT5; never assume broker website terms override the terminal.
-- Minimum lot may exceed both $5 margin and the risk budget. In that case **NO_TRADE**. Never bypass risk constraints to force a trade.
-- Broker compatibility checks and `order_calc_margin` / `order_calc_profit` are read-only. The existing `order_check` helper also does not transmit an order.
-- No credentials in source control or diagnostic output; Telegram is off by default.
-
-## Read-only diagnostic audit
-
-Phase 14 adds `app.validation.audit.build_audit` for a sanitized, timestamped summary of the manual diagnostic. It deliberately returns `can_trade: false` for every outcome and does not store or transmit the report. It must not be used as execution authorization.
-
-## Optional JSON audit export
+Có thể lưu bản tóm tắt kiểm tra dạng JSON:
 
 ```powershell
 python -m scripts.demo_diagnostic --side BUY --stop 2999.00 --audit-json demo-audit.json
 ```
 
-The audit file is newly created (existing files are never overwritten) and contains a sanitized report with `can_trade: false`. Keep audit records private. The stop value is illustrative only.
+File mới được tạo mà **không ghi đè file cũ**, chỉ chứa dữ liệu kiểm tra đã giới hạn; trường `can_trade` luôn là `false`. Không chia sẻ dữ liệu tài khoản hoặc báo cáo riêng tư công khai.
 
-## Audit file verification
+## 4. Tiến độ phát triển
 
-`app.validation.audit_integrity.verify_audit_file(path)` validates the report schema and safety flag and returns a SHA-256 checksum. A checksum detects changes only when compared against a previously trusted digest; it does not authenticate broker origin or authorize trading.
+| Phase | Chức năng đã có ở mức nền tảng |
+| --- | --- |
+| 1 | Adapter MT5, kiểm tra broker, quản lý rủi ro, dữ liệu giả lập |
+| 2 | Thu thập và xác thực nến OHLC đa khung thời gian |
+| 3 | Chỉ báo EMA/ATR, tín hiệu xu hướng và mô phỏng trên giấy |
+| 4 | Chỉ số backtest cơ bản, chia tập theo thời gian |
+| 5 | Đặc trưng và nhãn dữ liệu phục vụ nghiên cứu ML |
+| 6 | Sự kiện giám sát, đánh giá sức khỏe hệ thống |
+| 7 | Báo cáo HTML offline, ảnh chụp trạng thái |
+| 8 | Gửi cảnh báo Telegram khi bật thủ công, giới hạn tần suất |
+| 9 | Danh sách điều kiện đánh giá sẵn sàng Demo |
+| 10 | Ước tính tính khả thi của lot tối thiểu |
+| 11 | Công cụ chẩn đoán MT5 qua dòng lệnh |
+| 12 | Kiểm tra tài khoản Demo dựa trên chế độ MT5 |
+| 13 | Bắt buộc xác minh Demo trong công cụ chẩn đoán |
+| 14 | Tóm tắt chẩn đoán đã lọc dữ liệu nhạy cảm |
+| 15 | Xuất JSON báo cáo chỉ đọc, không ghi đè |
 
-## What remains incomplete
+| 16 | Xác minh cấu trúc báo cáo JSON và mã kiểm tra SHA-256 |
 
-No verified real LiteFinance Demo connection in CI; no tick-level realistic backtesting, model training and calibrated out-of-sample evaluation, durable alert operations, recovery and execution integration, extended forward Demo testing, or production trading controls. CI PASS means unit/lint/security checks passed, **not** that the bot can trade safely or profitably.
+Phase 16 đã được merge vào `main`. SHA-256 chỉ hỗ trợ kiểm tra tính toàn vẹn khi có mã đối chiếu đáng tin cậy.
 
-See `docs/phase9.md` through `docs/phase16.md` for validation limitations.
+## 5. Cấu trúc thư mục
+
+- `app/broker/`: đọc thông tin tài khoản, symbol, báo giá và phép tính MT5.
+- `app/risk/`: ước tính khối lượng và các giới hạn rủi ro.
+- `app/market_data/`: thu thập, kiểm tra và lưu nến.
+- `app/indicators/`, `app/strategies/`, `app/execution/`: chỉ báo, tín hiệu và quyết định paper-only.
+- `app/backtesting/`, `app/ml/`: công cụ nghiên cứu; chưa phải bộ máy backtest/AI hoàn chỉnh.
+- `app/monitoring/`, `app/dashboard/`, `app/notifications/`: giám sát và báo cáo.
+- `app/validation/`: xác minh Demo, chẩn đoán, xuất báo cáo.
+- `scripts/`: công cụ chạy thủ công.
+- `tests/`: kiểm thử chủ yếu sử dụng dữ liệu mô phỏng.
+- `docs/`: tài liệu các phase và báo cáo rà soát mã nguồn.
+
+## 6. Các giới hạn cần xử lý trước khi mở rộng
+
+- **Chưa xác minh bằng terminal LiteFinance Demo thật:** GitHub Actions chạy trên Linux với mock, không thể chứng thực tài khoản, điều kiện hợp đồng và báo giá thực.
+- **Chưa có mô phỏng khớp lệnh thực tế:** thiếu tick replay, spread biến động, trượt giá, gap và chi phí giao dịch đầy đủ.
+- **Chưa có pipeline huấn luyện/đánh giá mô hình AI:** hiện mới có đặc trưng, nhãn và các phép chia tập.
+- **Chưa có hệ thống gửi lệnh Demo được chứng nhận an toàn**, cũng không có tính năng gửi lệnh Live.
+- **Đã phát hiện các vấn đề cần sửa** trong quá trình rà soát, đặc biệt ở MockAdapter, kiểm tra Demo tại CLI cũ, đồng bộ dữ liệu đa khung và xử lý dữ liệu rủi ro. Xem `docs/code-review-2026-10.md`.
+
+## 7. Kiểm thử và nguyên tắc an toàn
+
+```powershell
+ruff check .
+python -m pytest -q
+bandit -r app -ll
+```
+
+Mọi thay đổi phải đi qua CI và review trước khi merge. Không đưa mật khẩu, token, thông tin đăng nhập vào repository. Chỉ sử dụng tài khoản Demo để kiểm tra; nếu không chắc chắn về điều kiện giao dịch, trả về `NO_TRADE`.
+
+Xem thêm `docs/phase9.md` đến `docs/phase15.md` và `docs/code-review-2026-10.md`.
