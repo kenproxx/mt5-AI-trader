@@ -24,7 +24,7 @@ def inspect_minimum_lot(adapter, status, *, side, stop, costs_usd=Decimal("0")):
         return Feasibility(BrokerState.NO_TRADE, "Invalid side")
     if not isinstance(stop, Decimal) or not isinstance(costs_usd, Decimal):
         return Feasibility(BrokerState.NO_TRADE, "Use Decimal risk inputs")
-    if not stop.is_finite() or not costs_usd.is_finite() or costs_usd < 0:
+    if not stop.is_finite() or stop <= 0 or not costs_usd.is_finite() or costs_usd < 0:
         return Feasibility(BrokerState.NO_TRADE, "Invalid stop or costs")
     symbol, account, tick = status.symbol, status.account, status.tick
     entry = tick.ask if side == "BUY" else tick.bid
