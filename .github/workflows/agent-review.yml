@@ -1,0 +1,46 @@
+name: Independent AI advisory agents
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+permissions:
+  contents: read
+  pull-requests: read
+concurrency:
+  group: ai-review-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  review:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        role: [code, qa, review, cicd, merge]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Prepare bounded context
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          parts = []
+          for name in ("AGENTS.md", "README.md", "pyproject.toml", "docs/phase2.md"):
+              p = Path(name)
+              if p.is_file():
+                  parts.append(f"## {name}\n" + p.read_text()[:4000])
+          Path("agent-context.txt").write_text("\n".join(parts)[:18000])
+          PY
+      - name: Run advisory agent
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          AGENT_MODEL: ${{ vars.AGENT_MODEL || 'gpt-4.1-mini' }}
+        run: python -m agents.orchestrator --role "${{ matrix.role }}" --context-file agent-context.txt --output "agent-${{ matrix.role }}.md"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: agent-${{ matrix.role }}
+          path: agent-${{ matrix.role }}.md
+          if-no-files-found: ignore
