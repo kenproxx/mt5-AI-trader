@@ -14,7 +14,6 @@ from app.automation.state import load_state, save_state
 from app.automation.worker import inspect_once
 from app.broker.mock import MockAdapter
 
-
 FINGERPRINT = "a" * 64
 WEDNESDAY = datetime(2026, 10, 21, 12, tzinfo=UTC)
 EQUITY = Decimal("5")
