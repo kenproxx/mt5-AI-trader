@@ -154,8 +154,8 @@ def test_closed_bar_signal_is_paper_only_and_sized_to_affordable_lot(tmp_path):
 
     adapter = MockAdapter()
     adapter.account = replace(
-        adapter.account, equity=Decimal("1000"), free_margin=Decimal("1000"),
-        balance=Decimal("1000"),
+        adapter.account, equity=Decimal("1000"), free_margin=Decimal("400"),
+        balance=Decimal("1000"), margin=Decimal("600"),
     )
     adapter.tick = replace(adapter.tick, time=int(WEDNESDAY.timestamp()))
 
