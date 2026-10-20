@@ -55,7 +55,7 @@ def inspect_once(adapter, *, state_file, settings, costs_usd, now=None):
 
     acct, sym, tick = status.account, status.symbol, status.tick
     fingerprint = hashlib.sha256(
-        f"{raw_account.login}|{acct.server}".encode("utf-8")
+        f"{raw_account.login}|{acct.server}".encode()
     ).hexdigest()
     state = update_periods(
         load_state(state_file), account_fingerprint=fingerprint,
