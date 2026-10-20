@@ -1,6 +1,5 @@
 """Strictly read-only XAUUSD scanner using only closed MT5 bars."""
-from datetime import UTC, datetime
-from decimal import Decimal, ROUND_CEILING, ROUND_FLOOR
+from decimal import ROUND_CEILING, ROUND_FLOOR, Decimal
 from math import isfinite
 
 from app.indicators.trend import atr
