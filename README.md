@@ -42,7 +42,7 @@ Chạy kiểm tra broker thực tế **chỉ đọc**:
 python -m app.main --real
 ```
 
-**Cảnh báo:** Lệnh `--real` hiện chỉ kiểm tra khả năng tương thích và rủi ro; chưa tự xác minh `trade_mode` của tài khoản là Demo. Không dùng đầu ra của lệnh này để cấp phép giao dịch.
+**Cảnh báo:** Lệnh `--real` chỉ kiểm tra broker/rủi ro trên tài khoản Demo qua `CompatibilityChecker` và không cấp quyền gửi lệnh. Dữ liệu phải được xác minh lại trên MT5 thực.
 
 ## 3. Kiểm tra tài khoản Demo và ký quỹ
 
@@ -116,3 +116,28 @@ bandit -r app -ll
 Mọi thay đổi phải đi qua CI và review trước khi merge. Không đưa mật khẩu, token, thông tin đăng nhập vào repository. Chỉ sử dụng tài khoản Demo để kiểm tra; nếu không chắc chắn về điều kiện giao dịch, trả về `NO_TRADE`.
 
 Xem thêm `docs/phase9.md` đến `docs/phase15.md` và `docs/code-review-2026-10.md`.
+
+## 8. Windows VPS — bộ giám sát kiểu VTRADE (Demo, chỉ đọc)
+
+Một hệ thống **độc lập, lấy cảm hứng từ các chức năng quản lý rủi ro và dashboard** của bot giao dịch tự động đã được bổ sung trên nhánh nâng cấp:
+
+- Bộ lọc spread, phiên thứ Sáu/cuối tuần, vị thế mở, giới hạn lỗ/equity drawdown và mục tiêu lợi nhuận ngày (tùy chọn).
+- Trạng thái khóa được lưu bền vững qua reboot; bảo vệ chống khởi động lại để xóa giới hạn rủi ro.
+- Quét nến đã đóng M1/M5/M15/H1, EMA trend và SL ATR tham khảo, kiểm tra khối lượng paper-only.
+- Dashboard đọc trạng thái tại localhost, không có lệnh Buy/Sell/Close.
+
+Chạy một chu kỳ với MT5 Demo đang mở:
+
+```powershell
+.\.venv\Scripts\python.exe -m app.automation.worker --mode mt5 --once
+```
+
+Chạy theo vòng lặp và dashboard:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\run_vps_monitor.ps1
+# Mở terminal PowerShell khác:
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\run_vps_dashboard.ps1
+```
+
+Xem [hướng dẫn chi tiết](docs/vtrade-style-vps.md). **Đây chưa phải tính năng tự giao dịch**; không có `order_send` và không mở giao dịch Live. Không sử dụng vốn thật để đánh giá khả năng vận hành của phiên bản này.
