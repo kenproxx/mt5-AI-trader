@@ -145,3 +145,51 @@ def test_mock_worker_never_places_orders(tmp_path):
     assert not report["can_place_order"]
     assert not report["entry_allowed"]
     assert report["blockers"] == ["TERMINAL_REQUIRED"]
+
+
+def test_closed_bar_signal_is_paper_only_and_sized_to_affordable_lot(tmp_path):
+    # Illustrative synthetic account, NOT evidence of feasible $5 XAUUSD trading.
+    from dataclasses import replace
+    from types import SimpleNamespace
+
+    adapter = MockAdapter()
+    adapter.account = replace(
+        adapter.account, equity=Decimal("1000"), free_margin=Decimal("1000"),
+        balance=Decimal("1000"),
+    )
+    adapter.tick = replace(adapter.tick, time=int(WEDNESDAY.timestamp()))
+
+    class FakeTerminal:
+        ACCOUNT_TRADE_MODE_DEMO = 0
+        TIMEFRAME_M1 = 1
+        TIMEFRAME_M5 = 5
+        TIMEFRAME_M15 = 15
+        TIMEFRAME_H1 = 60
+
+        def account_info(self):
+            return SimpleNamespace(login=123, trade_mode=0)
+
+        def positions_get(self):
+            return ()
+
+        def copy_rates_from_pos(self, symbol, timeframe, start, count):
+            seconds = {1: 60, 5: 300, 15: 900, 60: 3600}[timeframe]
+            now_epoch = int(WEDNESDAY.timestamp())
+            last = now_epoch - now_epoch % seconds - seconds
+            return [
+                {"time": last - (219 - i) * seconds,
+                 "open": 3000 + i * 0.01, "close": 3000 + i * 0.01,
+                 "high": 3000.5 + i * 0.01, "low": 2999.5 + i * 0.01}
+                for i in range(220)
+            ]
+
+    adapter.mt5 = FakeTerminal()
+    report = inspect_once(
+        adapter, state_file=tmp_path / "state.json",
+        settings=GuardSettings(), costs_usd=Decimal("0.01"), now=WEDNESDAY,
+    )
+    assert report["entry_allowed"]
+    assert report["signal"] == "BUY"
+    assert report["paper_lots"] == "0.01"
+    assert not report["can_place_order"]
+    assert (tmp_path / "state.json").exists()
