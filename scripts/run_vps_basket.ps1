@@ -1,4 +1,5 @@
 # Preview by default. No passwords are accepted or stored by this launcher.
+[CmdletBinding(PositionalBinding=$false)]
 param(
     [switch]$Execute,
     [long]$AccountLogin = 0
