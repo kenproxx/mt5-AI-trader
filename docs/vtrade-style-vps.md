@@ -1,5 +1,7 @@
 # Bộ điều khiển XAUUSD kiểu VTrade — phiên bản thử nghiệm (độc lập)
 
+Tài liệu này mô tả riêng worker giám sát cũ. Bộ quản lý rổ mới hỗ trợ 5 tính năng trong ảnh và gửi lệnh Demo bật riêng: [xem hướng dẫn](vtrade-basket.md).
+
 Bộ tính năng này **không phải mã nguồn VTRADE**, không bảo đảm giống chính xác sản phẩm thương mại hoặc có lợi nhuận. Một số sản phẩm tên VTrade là copy-trading, một số là MT5 EA; không đồng nhất.
 
 ## Đã triển khai

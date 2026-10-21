@@ -24,7 +24,7 @@ aside{color:#92a5be;font-size:13px;margin-top:20px;line-height:1.6}
 </style></head>
 <body>
 <header><div><h1>MT5 XAUUSD Control Center</h1>
-<p>Read-only monitoring · Windows VPS · Không gửi lệnh</p></div>
+<p>Windows VPS · Dashboard chỉ đọc · Xem chế độ worker bên dưới</p></div>
 <div class="tag" id="health">Đang đọc...</div></header>
 <section class="grid" id="cards"></section>
 <div class="card"><small>Điều kiện chặn lệnh mới</small>
@@ -35,12 +35,15 @@ Cập nhật từ dữ liệu giám sát mỗi 10 giây. Giới hạn spread và
 khiến bot ở trạng thái NO_TRADE, kể cả khi có tín hiệu.</aside>
 <script>
 const labels=[
-["timestamp_utc","Cập nhật UTC"],["broker_state","MT5 / Broker"],
+["timestamp_utc","Cập nhật UTC"],["mode","Chế độ worker"],["broker_state","MT5 / Broker"],
 ["equity_usd","Equity (USD)"],["spread_points","Spread (points)"],
 ["day_equity_change_pct","Thay đổi equity ngày (%)"],
 ["week_drawdown_pct","Drawdown tuần (%)"],["open_positions","Vị thế đang mở"],
-["signal","Tín hiệu nghiên cứu"],["paper_lots","Lot mô phỏng"],
-["paper_stop","Stop Loss mô phỏng"]
+["signal","Tín hiệu nghiên cứu"],["paper_lots","Lot quyết định"],
+["paper_stop","Stop Loss quyết định"],
+["basket_phase","Trạng thái rổ"],["total_lots","Tổng lot (gross)"],
+["basket_pnl_usd","PnL nổi của rổ (USD)"],["layers","Số tầng đã mở"],
+["action","Quyết định"],["execution","Kết quả thực thi"]
 ];
 async function update(){
   try {
@@ -56,8 +59,10 @@ async function update(){
        value.textContent=String(data[key]??'—');
        card.append(small,value);grid.append(card);
     }
-    document.getElementById('health').textContent=
-      data.entry_allowed?'PAPER ELIGIBLE · NO ORDER':'NO TRADE · READ ONLY';
+    const age=Date.now()-Date.parse(data.timestamp_utc??'');
+    const stale=!Number.isFinite(age)||age>90000||age < -5000;
+    document.getElementById('health').textContent=stale?'DỮ LIỆU CŨ / WORKER DỪNG':
+      String(data.mode??'DEMO_READ_ONLY')+' · '+String(data.execution??'READ ONLY');
     document.getElementById('blockers').textContent=
       (data.blockers??[]).join(' · ')||'Không có chặn bổ sung';
   } catch(_){
