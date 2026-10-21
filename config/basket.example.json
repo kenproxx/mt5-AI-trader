@@ -1,0 +1,32 @@
+{
+  "magic": 5202601,
+  "lot": "0.01",
+  "max_positions": 6,
+  "max_total_lots": "0.06",
+  "stop_points": "2000",
+  "dca_before_points": [
+    "300"
+  ],
+  "dca_after_points": [
+    "900",
+    "1500"
+  ],
+  "hedge_points": [
+    "600",
+    "1200"
+  ],
+  "hedge_ratios": [
+    "0.5",
+    "1"
+  ],
+  "pyramid_step_points": "300",
+  "max_pyramid_layers": 2,
+  "trim_enabled": true,
+  "trim_buffer_usd": "0.10",
+  "costs_per_lot_usd": "10",
+  "basket_take_profit_usd": "0",
+  "max_spread_points": "50",
+  "min_margin_level_pct": "200",
+  "cooldown_seconds": 60,
+  "deviation_points": 20
+}

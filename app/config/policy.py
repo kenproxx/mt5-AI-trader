@@ -1,4 +1,4 @@
-"""Fixed Phase 1 policy. Broker contract terms are always discovered."""
+"""Account-type-neutral risk policy. Broker contract terms are always discovered."""
 from dataclasses import dataclass
 from decimal import Decimal
 
@@ -14,12 +14,10 @@ class TradingPolicy:
     max_weekly_loss_pct: Decimal = Decimal("5")
     min_free_margin_reserve_pct: Decimal = Decimal("30")
     max_open_positions: int = 1
-    live_enabled: bool = False
-    trading_mode: str = "DEMO"
 
     def __post_init__(self):
-        if self.required_leverage != 50 or self.live_enabled or self.trading_mode != "DEMO":
-            raise ValueError("Phase 1 supports only 1:50 DEMO and forbids live trading")
+        if self.required_leverage != 50:
+            raise ValueError("Required account leverage is 1:50")
         if not (0 < self.target_risk_pct <= self.max_risk_pct <= 1):
             raise ValueError("Invalid risk policy")
         if not (0 < self.min_free_margin_reserve_pct < 100):

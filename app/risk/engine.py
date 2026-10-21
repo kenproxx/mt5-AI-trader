@@ -82,18 +82,29 @@ class RiskEngine:
                 return reject(BrokerState.NO_TRADE, "Nonpositive expected stop loss")
             if loss > budget:
                 break
-            selected = (size, loss)
+            # Check margin at EACH candidate, not only after selecting the largest
+            # risk-feasible lot. Otherwise a valid smaller size could be rejected.
+            try:
+                margin = dec(self.adapter.order_calc_margin(
+                    side, sym.name, float(size), float(entry)
+                ))
+            except (ValueError, TypeError, RuntimeError, OverflowError):
+                return reject(BrokerState.NO_TRADE, "Margin estimate failed")
+            if margin <= 0:
+                return reject(BrokerState.NO_TRADE, "Invalid margin estimate")
+            reserve = acct.equity * self.policy.min_free_margin_reserve_pct / 100
+            if acct.free_margin - margin < reserve:
+                break
+            selected = (size, loss, margin)
             size += sym.volume_step
         if selected is None:
-            return reject(BrokerState.LOT_BELOW_MINIMUM, "Minimum lot exceeds risk")
-        lots, loss = selected
-        try:
-            margin = dec(self.adapter.order_calc_margin(side, sym.name, float(lots), float(entry)))
-        except (ValueError, TypeError, RuntimeError, OverflowError):
-            return reject(BrokerState.NO_TRADE, "Margin estimate failed")
-        reserve = acct.equity * self.policy.min_free_margin_reserve_pct / 100
-        if margin <= 0:
-            return reject(BrokerState.NO_TRADE, "Invalid margin estimate")
-        if acct.free_margin - margin < reserve:
+            # Differentiate an impossible minimum-lot stop from margin shortfall.
+            if loss > budget:
+                return reject(BrokerState.LOT_BELOW_MINIMUM, "Minimum lot exceeds risk")
             return reject(BrokerState.INSUFFICIENT_MARGIN, "Insufficient margin reserve")
-        return RiskDecision(BrokerState.TRADE_ELIGIBLE, "Risk passes; order_check still required", lots, loss, margin)
+        lots, loss, margin = selected
+        return RiskDecision(
+            BrokerState.TRADE_ELIGIBLE,
+            "Risk and margin pass; order_check still required",
+            lots, loss, margin,
+        )

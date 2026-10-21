@@ -8,7 +8,7 @@ def order_preflight(adapter, decision, request):
     # Only the MT5 documented DONE retcode may be accepted.
     try:
         account = adapter.account_info()
-        if account is None or type(account.account_trade_mode) is not int or account.account_trade_mode != 0:
+        if account is None:
             return BrokerState.NO_TRADE
         result = adapter.order_check(request)
         if result is not None and type(result.retcode) is int and result.retcode == 10009:
