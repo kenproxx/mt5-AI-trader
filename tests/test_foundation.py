@@ -114,8 +114,10 @@ def test_stop_too_close():
     assert x.state == BrokerState.NO_TRADE
 
 
-def test_order_check():
+@pytest.mark.parametrize("mode", [0, 2, None])
+def test_order_check_uses_broker_result_regardless_of_account_type(mode):
     b = MockAdapter()
+    b.account = replace(b.account, account_trade_mode=mode)
     decision = RiskDecision(BrokerState.TRADE_ELIGIBLE, "sized")
     assert order_preflight(b, decision, {"sl": 2999.0}) == BrokerState.TRADE_ELIGIBLE
     b.order_check_result = type("Result", (), {"retcode": 0})()
@@ -127,4 +129,4 @@ def test_invalid_policy():
     with pytest.raises(ValueError):
         TradingPolicy(required_leverage=100)
     with pytest.raises(ValueError):
-        TradingPolicy(live_enabled=True)
+        TradingPolicy(target_risk_pct=Decimal("2"))

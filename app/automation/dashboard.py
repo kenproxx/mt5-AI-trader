@@ -7,7 +7,7 @@ from pathlib import Path
 PAGE = """<!doctype html>
 <html lang="vi"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>MT5 XAUUSD — DEMO Watch</title>
+<title>MT5 XAUUSD — Watch</title>
 <style>
 :root{font-family:system-ui,Arial,sans-serif;color-scheme:dark;
 background:#0c1524;color:#e5eaf3}
@@ -62,7 +62,7 @@ async function update(){
     const age=Date.now()-Date.parse(data.timestamp_utc??'');
     const stale=!Number.isFinite(age)||age>90000||age < -5000;
     document.getElementById('health').textContent=stale?'DỮ LIỆU CŨ / WORKER DỪNG':
-      String(data.mode??'DEMO_READ_ONLY')+' · '+String(data.execution??'READ ONLY');
+      String(data.mode??'MT5_READ_ONLY')+' · '+String(data.execution??'READ ONLY');
     document.getElementById('blockers').textContent=
       (data.blockers??[]).join(' · ')||'Không có chặn bổ sung';
   } catch(_){

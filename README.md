@@ -1,8 +1,8 @@
-# MT5 AI Trader — Bot nghiên cứu vàng XAUUSD (chỉ Demo)
+# MT5 AI Trader — Bot XAUUSD cho MetaTrader 5
 
-Dự án Python kết nối MetaTrader 5 (MT5) để **nghiên cứu, kiểm tra rủi ro, mô phỏng và thử giao dịch Demo có kiểm soát** chiến lược giao dịch vàng XAUUSD trên LiteFinance Classic.
+Dự án Python kết nối MetaTrader 5 (MT5) để **nghiên cứu, kiểm tra rủi ro, mô phỏng và quản lý rổ lệnh** giao dịch vàng XAUUSD trên LiteFinance Classic.
 
-> **Cảnh báo:** Đây **chưa phải bot AI giao dịch tự động hoàn chỉnh**. Module mới `app.basket` hỗ trợ gửi lệnh **Demo** khi bật rõ ràng; các công cụ cũ vẫn chỉ đọc. Không cho phép giao dịch tài khoản thật (Live) và **không bảo đảm lợi nhuận**. Kết quả CI chỉ chứng minh các kiểm thử tự động đã chạy thành công, không chứng minh bot hoạt động an toàn trên broker thật.
+Module `app.basket` chạy trên tài khoản MT5 bạn đăng nhập, **không kiểm tra hoặc chặn theo Demo/Live**. Bật gửi lệnh bằng `--execute --account-login SO_TAI_KHOAN`; mặc định là preview. Bot vẫn kiểm tra hedging, USD, đòn bẩy 1:50, quyền giao dịch và các giới hạn rủi ro. Các công cụ giám sát cũ vẫn chỉ đọc. Chưa có pipeline AI hoàn chỉnh hoặc kiểm thử tích hợp trên terminal broker thật; CI dùng terminal giả.
 
 ## 1. Thông số nền tảng
 
@@ -12,18 +12,18 @@ Dự án Python kết nối MetaTrader 5 (MT5) để **nghiên cứu, kiểm tra
 | Broker mục tiêu | LiteFinance, MT5 Classic |
 | Số vốn tham chiếu | **5 USD** |
 | Đòn bẩy bắt buộc | **1:50** |
-| Chế độ | **Demo / nghiên cứu**, không Live |
+| Loại tài khoản | Demo hoặc Live do người dùng chọn; bot không phân loại |
 | Rủi ro mục tiêu mỗi lệnh | 0,5% vốn |
 | Rủi ro tối đa mỗi lệnh | 1% vốn |
 | Giới hạn lỗ trong ngày / tuần | 2% / 5% |
 | Dự trữ ký quỹ tự do tối thiểu | 30% vốn |
-| Số vị thế mở tối đa | 1 ở bộ nền tảng; module rổ Demo mặc định 6, tổng 0,06 lot |
+| Số vị thế mở tối đa | 1 ở bộ nền tảng; module rổ mặc định 6, tổng 0,06 lot |
 
 **Lưu ý quan trọng với vốn 5 USD:** Nếu khối lượng tối thiểu của broker là 0,01 lot và số tiền ký quỹ hoặc mức lỗ tại Stop Loss vượt ngân sách, chương trình phải từ chối giao dịch (`NO_TRADE`). Không tăng đòn bẩy hoặc bỏ qua giới hạn rủi ro để ép mở lệnh. Thông số hợp đồng, spread, bước lot và yêu cầu ký quỹ phải lấy trực tiếp từ MT5, không coi giá trị mô phỏng là số liệu thực tế.
 
 ## 2. Cài đặt trên Windows 11
 
-Cài Python 3.11 hoặc 3.12 (64-bit) và MetaTrader 5. Đăng nhập tài khoản **LiteFinance Demo**, tự kiểm tra đúng máy chủ và đòn bẩy 1:50.
+Cài Python 3.11 hoặc 3.12 (64-bit) và MetaTrader 5. Đăng nhập tài khoản LiteFinance bạn muốn dùng, tự kiểm tra đúng máy chủ và đòn bẩy 1:50.
 
 Mở PowerShell tại thư mục dự án:
 
@@ -42,9 +42,13 @@ Chạy kiểm tra broker thực tế **chỉ đọc**:
 python -m app.main --real
 ```
 
-**Cảnh báo:** Lệnh `--real` chỉ kiểm tra broker/rủi ro trên tài khoản Demo qua `CompatibilityChecker` và không cấp quyền gửi lệnh. Dữ liệu phải được xác minh lại trên MT5 thực.
+Lệnh `--real` chỉ kiểm tra broker/rủi ro trên tài khoản MT5 đang kết nối qua `CompatibilityChecker` và không gửi lệnh. Loại tài khoản Demo/Live không ảnh hưởng đến kiểm tra này.
 
 ## 3. Kiểm tra tài khoản Demo và ký quỹ
+
+Đây là công cụ chẩn đoán Demo cũ, chạy riêng khi cần xác minh một tài khoản
+Demo. Bot `app.basket` và worker giám sát **không gọi công cụ này**, nên kết
+quả xác minh Demo không phải điều kiện chạy bot.
 
 ```powershell
 python -m scripts.demo_diagnostic --side BUY --stop 2999.00 --costs-usd 0
@@ -86,7 +90,7 @@ Phase 16 đã được merge vào `main`. SHA-256 chỉ hỗ trợ kiểm tra t�
 
 ## 5. Cấu trúc thư mục
 
-- `app/basket/`: quản lý rổ Hedge/DCA/Pyramiding/Trim, preview và gửi lệnh Demo bật riêng.
+- `app/basket/`: quản lý rổ Hedge/DCA/Pyramiding/Trim, preview và gửi lệnh MT5 bật riêng.
 - `app/broker/`: đọc thông tin tài khoản, symbol, báo giá và phép tính MT5.
 - `app/risk/`: ước tính khối lượng và các giới hạn rủi ro.
 - `app/market_data/`: thu thập, kiểm tra và lưu nến.
@@ -100,11 +104,10 @@ Phase 16 đã được merge vào `main`. SHA-256 chỉ hỗ trợ kiểm tra t�
 
 ## 6. Các giới hạn cần xử lý trước khi mở rộng
 
-- **Chưa xác minh bằng terminal LiteFinance Demo thật:** GitHub Actions chạy trên Linux với mock, không thể chứng thực tài khoản, điều kiện hợp đồng và báo giá thực.
+- **Chưa xác minh bằng terminal LiteFinance thật:** GitHub Actions chạy trên Linux/Windows với terminal giả, không thể chứng thực tài khoản, điều kiện hợp đồng và báo giá thực.
 - **Chưa có mô phỏng khớp lệnh thực tế:** thiếu tick replay, spread biến động, trượt giá, gap và chi phí giao dịch đầy đủ.
 - **Chưa có pipeline huấn luyện/đánh giá mô hình AI:** hiện mới có đặc trưng, nhãn và các phép chia tập.
-- **Chưa có hệ thống gửi lệnh Demo được chứng nhận an toàn**, cũng không có tính năng gửi lệnh Live.
-- **Đã phát hiện các vấn đề cần sửa** trong quá trình rà soát, đặc biệt ở MockAdapter, kiểm tra Demo tại CLI cũ, đồng bộ dữ liệu đa khung và xử lý dữ liệu rủi ro. Xem `docs/code-review-2026-10.md`.
+- Báo cáo rà soát nền tảng trước đây: `docs/code-review-2026-10.md`. Các tài liệu phase cũ phản ánh phạm vi Demo của thời điểm đó; phạm vi vận hành hiện tại nằm ở [hướng dẫn bộ quản lý rổ](docs/vtrade-basket.md).
 
 ## 7. Kiểm thử và nguyên tắc an toàn
 
@@ -114,11 +117,11 @@ python -m pytest -q
 bandit -r app -ll
 ```
 
-Mọi thay đổi phải đi qua CI và review trước khi merge. Không đưa mật khẩu, token, thông tin đăng nhập vào repository. Chỉ sử dụng tài khoản Demo để kiểm tra; nếu không chắc chắn về điều kiện giao dịch, trả về `NO_TRADE`.
+Mọi thay đổi phải đi qua CI và review trước khi merge. Không đưa mật khẩu, token, thông tin đăng nhập vào repository. Người dùng chọn tài khoản chạy; nếu dữ liệu broker hoặc điều kiện rủi ro không hợp lệ, bot trả về `NO_TRADE`.
 
 Xem thêm `docs/phase9.md` đến `docs/phase15.md` và `docs/code-review-2026-10.md`.
 
-## 8. Windows VPS — bộ giám sát kiểu VTRADE (Demo, chỉ đọc)
+## 8. Windows VPS — bộ giám sát kiểu VTRADE (chỉ đọc)
 
 Một hệ thống **độc lập, lấy cảm hứng từ các chức năng quản lý rủi ro và dashboard** của bot giao dịch tự động đã được bổ sung trên nhánh nâng cấp:
 
@@ -127,7 +130,7 @@ Một hệ thống **độc lập, lấy cảm hứng từ các chức năng qu�
 - Quét nến đã đóng M1/M5/M15/H1, EMA trend và SL ATR tham khảo, kiểm tra khối lượng paper-only.
 - Dashboard đọc trạng thái tại localhost, không có lệnh Buy/Sell/Close.
 
-Chạy một chu kỳ với MT5 Demo đang mở:
+Chạy một chu kỳ với MT5 đang mở:
 
 ```powershell
 .\.venv\Scripts\python.exe -m app.automation.worker --mode mt5 --once
@@ -141,7 +144,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\run_vps_monitor.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\run_vps_dashboard.ps1
 ```
 
-Xem [hướng dẫn chi tiết](docs/vtrade-style-vps.md). **Bộ giám sát ở mục này chỉ đọc**. Module rổ Demo mới ở mục 9 có gateway gửi lệnh riêng; không mở giao dịch Live. Không sử dụng vốn thật để đánh giá khả năng vận hành của phiên bản này.
+Xem [hướng dẫn chi tiết](docs/vtrade-style-vps.md). **Bộ giám sát ở mục này chỉ đọc**. Module rổ mới ở mục 9 có gateway gửi lệnh riêng.
 
 
 ## 9. Quản lý rổ lệnh theo 5 tính năng trong ảnh VTrade
@@ -149,20 +152,26 @@ Xem [hướng dẫn chi tiết](docs/vtrade-style-vps.md). **Bộ giám sát ở
 Đã bổ sung **Hedge nhiều tầng, DCA trước/sau Hedge, Pyramiding, Trim và giới
 hạn tổng lot/ký quỹ**. Thuật toán độc lập theo mô tả người dùng, không sao
 chép hay xác nhận hiệu quả của sản phẩm VTrade. Mặc định là preview; hỗ trợ
-execution chỉ trên MT5 **Demo hedging, USD, 1:50** với login được chỉ định.
+execution trên MT5 **hedging, USD, 1:50** với login được chỉ định. Demo/Live
+do bạn chọn trong terminal, bot không kiểm tra loại tài khoản này.
 
 ```powershell
 # Kiểm tra mock: vốn tham chiếu 5 USD dự kiến bị chặn bởi giới hạn rủi ro.
 .\.venv\Scripts\python.exe -m app.basket.worker --once
 
-# Đọc MT5 Demo và xem quyết định, không gửi lệnh.
+# Đọc MT5 và xem quyết định, không gửi lệnh.
 .\.venv\Scripts\python.exe -m app.basket.worker --mode mt5 --config config/basket.example.json --once
+
+# Chạy bot liên tục: thay 12345678 bằng login MT5 bạn đang dùng.
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\run_vps_basket.ps1 -AccountLogin 12345678 -Execute
 
 # Dashboard cho module rổ (cửa sổ PowerShell khác).
 .\.venv\Scripts\python.exe -m app.automation.dashboard --status-file data/basket-status.json
 ```
 
-Đọc [hướng dẫn đầy đủ và cách bật gửi lệnh Demo](docs/vtrade-basket.md) trước
-khi dùng `--execute-demo`. Cấu hình: [basket.example.json](config/basket.example.json).
+Đọc [hướng dẫn đầy đủ và cách bật gửi lệnh](docs/vtrade-basket.md).
+Cờ cũ `--execute-demo` / `-ExecuteDemo` đã đổi thành `--execute` / `-Execute`;
+cần cập nhật Task Scheduler nếu đã dùng launcher cũ.
+Cấu hình: [basket.example.json](config/basket.example.json).
 Dữ liệu trạng thái: `data/basket-state.sqlite3`. **Chưa kiểm thử tích hợp
 trên terminal LiteFinance/Windows VPS thật**; CI chỉ dùng terminal giả.

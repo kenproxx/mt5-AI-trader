@@ -23,15 +23,24 @@ Trim có thể gồm hai lệnh đóng tuần tự, mỗi lệnh đều có ki�
 
 ## Hai chế độ với MT5
 
-- **Preview (mặc định):** đọc MT5 Demo, tính quyết định, cập nhật báo cáo;
+- **Preview (mặc định):** đọc MT5, tính quyết định, cập nhật báo cáo;
   không gọi `order_send`, không giả lập rằng vị thế đã được mở.
-- **Demo execution:** chỉ khi có `--execute-demo --account-login SO_TAI_KHOAN`.
-  Bot kiểm tra tài khoản Demo, USD, đòn bẩy **1:50**, chế độ **hedging**, cho
-  phép lệnh đối ứng, không áp dụng FIFO, và đúng login đã chỉ định. Không
-  có tùy chọn Live. Dùng tài khoản Demo riêng cho bot, cùng một Windows user.
+- **Execution:** bật bằng `--execute --account-login SO_TAI_KHOAN`.
+  Bạn tự chọn tài khoản Demo/Live trong MT5; bot **không kiểm tra loại tài
+  khoản**. Bot vẫn kiểm tra USD, đòn bẩy **1:50**, chế độ **hedging**, cho
+  phép lệnh đối ứng, không áp dụng FIFO, và đúng login đã chỉ định. Dùng tài
+  khoản riêng cho bot, cùng một Windows user.
+
+Cờ `--execute-demo` và tham số PowerShell `-ExecuteDemo` cũ đã được thay
+bằng `--execute` và `-Execute`. Cập nhật lệnh chạy/Task Scheduler; cờ cũ
+sẽ báo lỗi thay vì được tự hiểu là cho phép giao dịch mọi loại tài khoản.
+Nhãn báo cáo mới là `MT5_PREVIEW` / `MT5_EXECUTION`; watcher là
+`MT5_READ_ONLY`. Không cần đổi schema journal hay xóa state khi cập nhật mã.
 
 Các lệnh cũ `app.main`, `scripts.demo_diagnostic`, `app.automation.worker`
-vẫn chỉ đọc. Gateway mới nằm trong `app/basket/gateway.py`.
+vẫn chỉ đọc. `scripts.demo_diagnostic` là tiện ích xác minh Demo độc lập,
+không nằm trong luồng chạy bot. Gateway `MT5Gateway` nằm trong
+`app/basket/gateway.py`.
 
 ## Cài đặt và chạy
 
@@ -40,14 +49,14 @@ Trong PowerShell tại VPS Windows có Git, Python 3.11/3.12 64-bit và MT5:
 ```powershell
 git clone https://github.com/kenproxx/mt5-AI-trader.git
 cd mt5-AI-trader
-git switch feature/vtrade-style-vps-guardrails
+git switch main
+git pull --ff-only
 py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e ".[dev,mt5]"
 .\.venv\Scripts\python.exe -m pytest -q
 ```
 
-Nếu đã clone repo, cập nhật đúng nhánh PR sau khi bảo toàn thay đổi riêng.
-PR chưa merge thì `main` chưa có tính năng này.
+Nếu đã clone repo, cập nhật nhánh `main` sau khi bảo toàn thay đổi riêng.
 
 1. Kiểm tra pipeline với dữ liệu giả, không cần MT5:
 
@@ -58,7 +67,7 @@ PR chưa merge thì `main` chưa có tính năng này.
 Kết quả dự kiến của ví dụ mặc định 5 USD là `ORDER_RISK_LIMIT`; tín hiệu
 BUY ở chế độ mock chỉ là đầu vào tổng hợp để kiểm tra pipeline.
 
-2. Mở MT5, đăng nhập tài khoản **Demo hedging** USD 1:50; chạy một vòng preview:
+2. Mở MT5, đăng nhập tài khoản **hedging** USD 1:50 bạn chọn; chạy một vòng preview:
 
 ```powershell
 .\.venv\Scripts\python.exe -m app.basket.worker --mode mt5 --config config/basket.example.json --once
@@ -76,19 +85,20 @@ worker, quyết định, kết quả thực thi, tổng lot, PnL nổi, số t�
 chặn. Dữ liệu quá 90 giây được đánh dấu cũ. Chu kỳ mặc định 30 giây; nếu
 chỉnh dài hơn 90 giây, dashboard vẫn đánh dấu cũ giữa các lần cập nhật.
 
-4. Chỉ khi chủ động thử **gửi lệnh Demo**, thay số ví dụ bằng login Demo của bạn:
+4. Bật gửi lệnh, thay số ví dụ bằng login MT5 của bạn:
 
 ```powershell
-.\.venv\Scripts\python.exe -m app.basket.worker --mode mt5 --config config/basket.example.json --account-login 12345678 --execute-demo --once
+.\.venv\Scripts\python.exe -m app.basket.worker --mode mt5 --config config/basket.example.json --account-login 12345678 --execute --once
 ```
 
 Chạy liên tục qua launcher:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts\run_vps_basket.ps1 -AccountLogin 12345678 -ExecuteDemo
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\run_vps_basket.ps1 -AccountLogin 12345678 -Execute
 ```
 
-Lệnh này có thể mở/đóng vị thế Demo khi tín hiệu và tất cả điều kiện hợp lệ.
+Lệnh này có thể mở/đóng vị thế trên tài khoản đang kết nối khi tín hiệu và
+tất cả điều kiện hợp lệ.
 Không đưa mật khẩu vào cấu hình; bot dùng phiên MT5 đã đăng nhập. Dừng bằng
 Ctrl+C **không đóng các vị thế đang mở**; SL tại broker vẫn còn. Task
 Scheduler dùng *At log on*, cùng user chạy MT5, và không tạo thêm phiên bản
@@ -163,6 +173,10 @@ Có kiểm thử planner, gateway qua terminal giả, payload, restart, khóa đ
 thời, chuyển tài khoản, lỗi dữ liệu và chuỗi nhiều tầng. Có regression test
 cho PnL thay đổi giữa các lần đọc, spread giãn ngay trước send, giá hết hạn,
 ngân sách ngày co lại và thứ tự đóng Hedge làm thay đổi margin.
+Kiểm thử luồng CLI đến gateway dùng cùng dữ liệu cho tài khoản Demo và Live
+giả lập; cả hai đều có thể gửi lệnh, restart không gửi trùng. Loại tài khoản
+thiếu/khác cũng không phải blocker; các chặn về quyền giao dịch, login,
+hedging, đòn bẩy và quản trị vốn vẫn áp dụng.
 
 **Chưa chạy với Windows VPS/terminal LiteFinance thật trong phiên phát triển
 này.** CI trên Linux/Windows với terminal giả không xác nhận điều kiện broker, tốc độ khớp, lợi nhuận hay

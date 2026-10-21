@@ -22,7 +22,7 @@ def inspect_once(adapter, *, state_file, settings, costs_usd, now=None):
     status = CompatibilityChecker(adapter).inspect(now_epoch=int(now.timestamp()))
     report = {
         "timestamp_utc": now.astimezone(UTC).isoformat(),
-        "mode": "DEMO_READ_ONLY",
+        "mode": "MT5_READ_ONLY",
         "can_place_order": False,
         "broker_state": status.state.value,
         "entry_allowed": False,
@@ -34,7 +34,6 @@ def inspect_once(adapter, *, state_file, settings, costs_usd, now=None):
     if not status.eligible:
         report["blockers"] = ["BROKER_INELIGIBLE"]
         return report
-    # Even if a policy is misconfigured, the account MUST remain DEMO.
     mt5 = getattr(adapter, "mt5", None)
     if mt5 is None:
         report["blockers"] = ["TERMINAL_REQUIRED"]
@@ -42,11 +41,8 @@ def inspect_once(adapter, *, state_file, settings, costs_usd, now=None):
     raw_account = mt5.account_info()
     if (raw_account is None
         or type(getattr(raw_account, "login", None)) is not int
-        or raw_account.login <= 0
-        or getattr(raw_account, "trade_mode", None) != getattr(
-            mt5, "ACCOUNT_TRADE_MODE_DEMO", 0
-        )):
-        report["blockers"] = ["DEMO_IDENTITY_UNVERIFIED"]
+        or raw_account.login <= 0):
+        report["blockers"] = ["ACCOUNT_IDENTITY_UNVERIFIED"]
         return report
     positions = mt5.positions_get()  # All symbols: account-wide one-position cap.
     if positions is None:
@@ -130,7 +126,7 @@ def write_status(path, report):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Read-only VTrade-style DEMO watcher")
+    parser = argparse.ArgumentParser(description="Read-only VTrade-style MT5 watcher")
     parser.add_argument("--mode", choices=("mock", "mt5"), default="mock")
     parser.add_argument("--once", action="store_true")
     parser.add_argument("--interval", type=int, default=30)
@@ -168,7 +164,7 @@ def main():
                 print(json.dumps(report, sort_keys=True), flush=True)
             except (ValueError, OSError, RuntimeError, ArithmeticError):
                 # No exception details: errors may contain terminal/account secrets.
-                report = {"mode": "DEMO_READ_ONLY", "can_place_order": False,
+                report = {"mode": "MT5_READ_ONLY", "can_place_order": False,
                           "entry_allowed": False, "blockers": ["WORKER_ERROR"]}
                 print(json.dumps(report), flush=True)
                 # Do not overwrite the previously verified persisted guard state.

@@ -17,13 +17,10 @@ class DashboardSnapshot:
 
 
 def build_snapshot(*, mode, broker_connected, data_fresh, risk_ready, trade_pnl):
-    if mode != "DEMO":
-        raise ValueError("Dashboard supports DEMO only")
     health = assess_health(
         broker_connected=broker_connected,
         data_fresh=data_fresh,
         risk_ready=risk_ready,
-        demo_account=True,
     )
     metrics = summarize(trade_pnl, initial_equity=Decimal("5"))
     return DashboardSnapshot(

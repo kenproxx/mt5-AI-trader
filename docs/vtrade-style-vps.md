@@ -1,11 +1,11 @@
 # Bộ điều khiển XAUUSD kiểu VTrade — phiên bản thử nghiệm (độc lập)
 
-Tài liệu này mô tả riêng worker giám sát cũ. Bộ quản lý rổ mới hỗ trợ 5 tính năng trong ảnh và gửi lệnh Demo bật riêng: [xem hướng dẫn](vtrade-basket.md).
+Tài liệu này mô tả riêng worker giám sát cũ. Bộ quản lý rổ mới hỗ trợ 5 tính năng trong ảnh và gửi lệnh bật riêng: [xem hướng dẫn](vtrade-basket.md). Cả hai worker đều không chặn theo loại tài khoản Demo/Live.
 
 Bộ tính năng này **không phải mã nguồn VTRADE**, không bảo đảm giống chính xác sản phẩm thương mại hoặc có lợi nhuận. Một số sản phẩm tên VTrade là copy-trading, một số là MT5 EA; không đồng nhất.
 
 ## Đã triển khai
-- Chạy tiến trình quan sát MT5 trên **Windows VPS**, chỉ DEMO và chỉ đọc.
+- Chạy tiến trình quan sát MT5 trên **Windows VPS**, chỉ đọc.
 - Kiểm tra tài khoản USD, 1:50, XAUUSD, giá hợp lệ qua CompatibilityChecker hiện có.
 - Lấy **nến đóng** M1, M5, M15, H1 (bỏ nến đang hình thành); xác minh timestamp, độ mới, OHLC hợp lệ.
 - Tạo tín hiệu EMA nhiều khung đã có sẵn; SL tham khảo từ 2×ATR(M5), tôn trọng tick-size/minimum stop.
@@ -26,7 +26,7 @@ py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe -m app.automation.worker --mode mock --once
 ```
 
-Đăng nhập MT5 **Demo** (LiteFinance Classic, USD, 1:50), mở biểu đồ XAUUSD và xác minh contract/lot/spread trong terminal. Không cấp quyền cho Python gửi lệnh nếu chỉ dùng bộ quan sát.
+Đăng nhập tài khoản MT5 bạn chọn (LiteFinance Classic, USD, 1:50), mở biểu đồ XAUUSD và xác minh contract/lot/spread trong terminal.
 
 ```powershell
 # 1 chu kỳ: đọc terminal thật nhưng KHÔNG gửi lệnh
@@ -56,13 +56,13 @@ Có thể dùng Task Scheduler tạo **hai task**, cùng Trigger *At log on*, Ac
 - `--max-spread-points 50` có đơn vị là **MT5 point**, không phải USD. Phải chỉnh theo dữ liệu symbol thực.
 - `--estimated-costs-usd`: số tiền dự trù thủ công cho phí trong mô phỏng, không thay thế kiểm chứng commission/slippage từ broker.
 
-## Giới hạn và lưu ý trước khi xem xét Demo auto-trade
+## Giới hạn của worker giám sát
 1. Chưa có `order_send`, sửa SL/TP, trailing stop thực tế, thoát lệnh tự động, news calendar thực, hoặc copy-trading. Dashboard chỉ đọc và không phải PnL đã thực hiện.
 2. Rủi ro đo từ equity nên nạp/rút tiền, swap, hoặc biến động vị thế đang mở có thể làm sai baseline. Muốn triển khai gửi lệnh cần tính chính xác realized PnL từ `history_deals_get`, phát hiện cashflow, chi phí và đối chiếu trạng thái sau reconnect.
-3. Bot chưa được kiểm thử với Windows VPS và tài khoản LiteFinance thực: CI trên Linux chỉ dùng mock. Cần kiểm thử Windows/MT5 Demo và thêm kiểm thử tích hợp trước khi bật execution.
+3. Bot chưa được kiểm thử với Windows VPS và tài khoản LiteFinance thực: CI trên Linux/Windows chỉ dùng terminal giả.
 4. File `data/vps-guard-state.json` chứa baseline/khóa tài khoản theo hash login+server. **Không xóa file để vượt giới hạn**. Khi thay tài khoản, worker chặn bằng `WORKER_ERROR`; phải đánh giá và khởi tạo môi trường/state mới có kiểm soát.
 5. Khoản vốn 5 USD, tài khoản đòn bẩy 1:50 thường không cho phép giao dịch 0.01 lot XAUUSD trong các giới hạn rủi ro đã định; khi broker từ chối lot tối thiểu cần giữ `NO_TRADE`, tuyệt đối không nới giới hạn cho đủ lệnh.
-6. Trong mọi trường hợp **không có cơ chế tự bật Live**; tuyệt đối không commit mật khẩu MT5, token Telegram hoặc báo cáo riêng tư.
+6. Worker này không gửi lệnh dù tài khoản là Demo hay Live. Không commit mật khẩu MT5, token Telegram hoặc báo cáo riêng tư.
 
 ## Kiểm thử
 ```powershell

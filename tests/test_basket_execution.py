@@ -6,7 +6,7 @@ import pytest
 from basket_fakes import Terminal
 
 from app.basket.config import BasketConfig
-from app.basket.gateway import DemoGateway
+from app.basket.gateway import MT5Gateway
 from app.basket.journal import Journal
 from app.basket.models import BasketState
 from app.basket.runner import BasketRunner
@@ -15,7 +15,7 @@ from app.basket.runner import BasketRunner
 def runner(tmp_path, terminal=None, login=123):
     terminal = terminal or Terminal()
     cfg = BasketConfig()
-    return BasketRunner(DemoGateway(terminal, cfg, expected_login=login, clock=lambda: terminal.tick.time),
+    return BasketRunner(MT5Gateway(terminal, cfg, expected_login=login, clock=lambda: terminal.tick.time),
                         tmp_path / 'basket.sqlite3', cfg), terminal
 
 
@@ -23,16 +23,20 @@ def cycle(r, t, execute=True, signal='BUY'):
     return r.cycle(now=t.tick.time, signal=signal, execute=execute)
 
 
-def test_preview_never_sends_but_reports_decision(tmp_path):
+@pytest.mark.parametrize('account_type', [0, 2])
+def test_preview_never_sends_but_reports_decision(tmp_path, account_type):
     r, t = runner(tmp_path)
+    t.account.trade_mode = account_type
     report = cycle(r, t, execute=False)
     assert report['action'] == 'SEED'
     assert report['execution'] == 'PREVIEW'
     assert not t.sent
 
 
-def test_demo_seed_records_ticket_and_does_not_duplicate_after_restart(tmp_path):
+@pytest.mark.parametrize('account_type', [0, 2, 1, None, False])
+def test_seed_ignores_account_type_and_does_not_duplicate_after_restart(tmp_path, account_type):
     r, t = runner(tmp_path)
+    t.account.trade_mode = account_type
     assert cycle(r, t)['execution'] == 'FILLED'
     assert t.sent[0]['sl'] == 2980
     assert t.sent[0]['type_filling'] == 0
@@ -41,11 +45,20 @@ def test_demo_seed_records_ticket_and_does_not_duplicate_after_restart(tmp_path)
     assert len(t.sent) == 1
 
 
-@pytest.mark.parametrize(('field', 'bad'), [('trade_mode', 2), ('trade_mode', False),
-    ('margin_mode', 0), ('leverage', 100), ('currency', 'EUR'), ('hedge_allowed', False),
-    ('fifo_close', True), ('login', 456)])
-def test_wrong_account_never_sends(tmp_path, field, bad):
+def test_missing_account_type_metadata_does_not_block_execution(tmp_path):
     r, t = runner(tmp_path)
+    del t.account.trade_mode
+    assert cycle(r, t)['execution'] == 'FILLED'
+    assert len(t.positions) == 1
+
+
+@pytest.mark.parametrize('account_type', [0, 2])
+@pytest.mark.parametrize(('field', 'bad'), [
+    ('margin_mode', 0), ('leverage', 100), ('currency', 'EUR'), ('hedge_allowed', False),
+    ('fifo_close', True), ('login', 456), ('trade_allowed', False), ('trade_expert', False)])
+def test_wrong_account_never_sends(tmp_path, field, bad, account_type):
+    r, t = runner(tmp_path)
+    t.account.trade_mode = account_type
     setattr(t.account, field, bad)
     assert cycle(r, t)['execution'] == 'BLOCKED'
     assert not t.sent

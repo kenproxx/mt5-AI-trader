@@ -147,7 +147,8 @@ def test_mock_worker_never_places_orders(tmp_path):
     assert report["blockers"] == ["TERMINAL_REQUIRED"]
 
 
-def test_closed_bar_signal_is_paper_only_and_sized_to_affordable_lot(tmp_path):
+@pytest.mark.parametrize('account_type', [0, 2, None])
+def test_closed_bar_signal_is_paper_only_and_sized_to_affordable_lot(tmp_path, account_type):
     # Illustrative synthetic account, NOT evidence of feasible $5 XAUUSD trading.
     from dataclasses import replace
     from types import SimpleNamespace
@@ -155,7 +156,7 @@ def test_closed_bar_signal_is_paper_only_and_sized_to_affordable_lot(tmp_path):
     adapter = MockAdapter()
     adapter.account = replace(
         adapter.account, equity=Decimal("1000"), free_margin=Decimal("400"),
-        balance=Decimal("1000"), margin=Decimal("600"),
+        balance=Decimal("1000"), margin=Decimal("600"), account_trade_mode=account_type,
     )
     adapter.tick = replace(adapter.tick, time=int(WEDNESDAY.timestamp()))
 
@@ -167,7 +168,7 @@ def test_closed_bar_signal_is_paper_only_and_sized_to_affordable_lot(tmp_path):
         TIMEFRAME_H1 = 60
 
         def account_info(self):
-            return SimpleNamespace(login=123, trade_mode=0)
+            return SimpleNamespace(login=123, trade_mode=account_type)
 
         def positions_get(self):
             return ()

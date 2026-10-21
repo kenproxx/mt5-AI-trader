@@ -64,7 +64,7 @@ class BasketRunner:
     def cycle(self, *, now=None, signal=None, execute=False):
         now = now if now is not None else int(datetime.now(UTC).timestamp())
         report = dict(timestamp_utc=datetime.fromtimestamp(now, UTC).isoformat(),
-            mode='DEMO_EXECUTION' if execute else 'DEMO_PREVIEW',
+            mode='MT5_EXECUTION' if execute else 'MT5_PREVIEW',
             can_place_order=False, entry_allowed=False, blockers=[], action='HOLD',
             execution='BLOCKED', broker_state='NO_TRADE', signal=signal or 'HOLD')
         try:

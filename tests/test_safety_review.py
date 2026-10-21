@@ -9,13 +9,20 @@ from app.broker.models import BrokerState
 from app.risk.engine import RiskEngine
 
 
-@pytest.mark.parametrize("mode", [None, 1, 2, False])
-def test_non_demo_mode_fails_closed(mode):
+@pytest.mark.parametrize("mode", [0, 1, 2, None, False])
+def test_account_type_does_not_gate_broker_compatibility(mode):
     broker = MockAdapter()
     broker.account = replace(broker.account, account_trade_mode=mode)
     status = CompatibilityChecker(broker).inspect(now_epoch=broker.tick.time)
+    assert status.eligible
+
+
+@pytest.mark.parametrize("mode", [0, 2])
+def test_disabled_trading_still_blocks_both_account_types(mode):
+    broker = MockAdapter()
+    broker.account = replace(broker.account, account_trade_mode=mode, trade_allowed=False)
+    status = CompatibilityChecker(broker).inspect(now_epoch=broker.tick.time)
     assert status.state == BrokerState.TRADING_DISABLED
-    assert not status.eligible
 
 
 @pytest.mark.parametrize("invalid", [None, 0.1, float("nan"), Decimal("NaN"), Decimal("Infinity")])

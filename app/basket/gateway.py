@@ -1,4 +1,4 @@
-"""Write-capable boundary restricted to an explicitly selected MT5 Demo account."""
+"""Write-capable boundary for an explicitly selected MT5 hedging account."""
 import hashlib
 import time
 from dataclasses import replace
@@ -26,7 +26,7 @@ def position_structure(snapshot):
                  for p in snapshot.positions)
 
 
-class DemoGateway:
+class MT5Gateway:
     def __init__(self, mt5, config, *, expected_login=None, clock=None):
         self.mt5, self.config = mt5, config
         self.adapter = MT5Adapter(mt5)
@@ -40,12 +40,11 @@ class DemoGateway:
         raw = self.mt5.account_info()
         terminal = self.mt5.terminal_info()
         if (raw is None or type(raw.login) is not int or raw.login <= 0
-            or type(raw.trade_mode) is not int or raw.trade_mode != 0
             or type(raw.margin_mode) is not int or raw.margin_mode != 2
             or raw.hedge_allowed is not True or raw.fifo_close is not False
             or raw.leverage != 50 or raw.currency != 'USD'
             or raw.trade_allowed is not True or raw.trade_expert is not True):
-            raise Blocked('DEMO_HEDGING_REQUIRED')
+            raise Blocked('HEDGING_ACCOUNT_REQUIRED')
         if self.expected_login is not None and raw.login != self.expected_login:
             raise Blocked('ACCOUNT_LOGIN_MISMATCH')
         if (terminal is None or terminal.connected is not True
@@ -92,7 +91,7 @@ class DemoGateway:
 
     def prepare(self, snapshot, decision, *, ticket=None):
         if type(self.expected_login) is not int or self.expected_login <= 0:
-            raise Blocked('EXPLICIT_DEMO_LOGIN_REQUIRED')
+            raise Blocked('EXPLICIT_ACCOUNT_LOGIN_REQUIRED')
         fresh = self.snapshot(int(self.clock()), {str(p.ticket): p.role for p in snapshot.positions})
         if fresh.identity != snapshot.identity or position_structure(fresh) != position_structure(snapshot):
             raise Blocked('POSITION_OR_ACCOUNT_CHANGED')

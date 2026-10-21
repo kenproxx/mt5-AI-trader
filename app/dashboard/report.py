@@ -14,11 +14,11 @@ def render_html(snapshot):
     return (
         "<!doctype html><html lang='en'><head><meta charset='utf-8'>"
         "<meta name='viewport' content='width=device-width,initial-scale=1'>"
-        "<title>MT5 Demo Monitoring</title>"
+        "<title>MT5 Monitoring</title>"
         "<style>body{font:16px system-ui;max-width:800px;margin:3rem auto;"
         "padding:1rem}table{border-collapse:collapse;width:100%}"
         "td,th{border:1px solid #aaa;padding:.75rem;text-align:left}</style>"
-        "</head><body><h1>MT5 Demo Monitoring</h1>"
+        "</head><body><h1>MT5 Monitoring</h1>"
         "<p>Offline read-only report. Not a trading control panel.</p>"
         "<table>" + rows + "</table></body></html>"
     )

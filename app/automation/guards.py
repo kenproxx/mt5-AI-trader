@@ -1,4 +1,4 @@
-"""VTrade-inspired entry guards; independent design, DEMO research only.
+"""VTrade-inspired entry guards; independent of the MT5 account type.
 
 No broker writes, trade execution, grid, or martingale are implemented here.
 """

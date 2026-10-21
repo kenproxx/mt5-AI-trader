@@ -1,4 +1,4 @@
-# Run in a logged-on Windows VPS session with MT5 LiteFinance Demo open.
+# Run in a logged-on Windows VPS session with MT5 LiteFinance open.
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 Set-Location $root

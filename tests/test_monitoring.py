@@ -4,16 +4,16 @@ from app.monitoring.events import make_event, serialize_event
 from app.monitoring.health import assess_health
 
 
-def test_healthy_demo():
+def test_health_does_not_require_account_type():
     assert assess_health(broker_connected=True, data_fresh=True,
-                         risk_ready=True, demo_account=True).healthy
+                         risk_ready=True).healthy
 
 
 def test_fail_closed():
     h = assess_health(broker_connected=False, data_fresh=False,
-                      risk_ready=True, demo_account=False)
+                      risk_ready=True)
     assert not h.healthy
-    assert "not_demo_account" in h.reasons
+    assert h.reasons == ("broker_disconnected", "market_data_stale")
 
 
 def test_event_serialization():
